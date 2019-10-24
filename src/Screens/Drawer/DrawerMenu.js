@@ -8,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   Alert,
+  DeviceEventEmitter,
 } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import {DrawerItems} from 'react-navigation';
@@ -19,6 +20,7 @@ const userImage = require('../../Assets/profile.png');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
   signOut: {
     flexDirection: 'row',
@@ -37,7 +39,7 @@ const styles = StyleSheet.create({
   },
   userImageContainer: {
     height: 150,
-    backgroundColor: 'white',
+    backgroundColor: 'blue',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -45,6 +47,9 @@ const styles = StyleSheet.create({
     height: 90,
     width: 90,
     borderRadius: 60,
+    borderColor: 'black',
+    borderWidth: 2,
+    backgroundColor: 'white',
   },
 });
 
@@ -72,6 +77,7 @@ const DrawerMenu = props => {
                   text: 'Sign Out',
                   onPress: async () => {
                     await AsyncStorage.clear();
+                    DeviceEventEmitter.removeAllListeners();
                     props.navigation.navigate('Auth');
                   },
                 },

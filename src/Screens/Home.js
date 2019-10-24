@@ -6,24 +6,49 @@
  * @flow
  */
 
-import React, {useState, useEffect} from 'react';
-import {Text, DeviceEventEmitter, Image} from 'react-native';
-import {Container, Header, Content, Footer, CardItem, Body, Card, Title, Right} from 'native-base';
+import React, {useState, useEffect, useRef} from 'react';
+import {Text, DeviceEventEmitter, Image, StyleSheet} from 'react-native';
+import {Container, Content, CardItem, Body, Card} from 'native-base';
 import Beacons from 'react-native-beacons-manager';
 import DeviceInfo from 'react-native-device-info';
-import AsyncStorage from '@react-native-community/async-storage';
+import createUserHistory from '../Api/UserHistory';
+import getUserProfile from '../Api/Profile';
 
-// Beacons.detectIBeacons();
+function useStateRef(initialValue) {
+  const [value, setValue] = useState(initialValue);
+
+  const ref = useRef(value);
+
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return [value, setValue, ref];
+}
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  headerContainer: {
+    backgroundColor: 'blue',
+  },
+  headerText: {
+    fontWeight: 'bold',
+    color: 'white',
+  },
+});
 
 const Home = () => {
   const [counter, setCounter] = useState(0);
-  const [room, setRoom] = useState('');
+  const [value, setValue, ref] = useStateRef('');
   const [uniqueId, setUniqueId] = useState('');
   const [deviceName, setDeviceName] = useState('');
 
   const getProfile = async () => {
     const profileData = await getUserProfile();
-    setProfile(profileData);
+    console.log(profileData);
     setUniqueId(profileData.uniqueDeviceId);
     setDeviceName(await DeviceInfo.getDeviceName());
   };
@@ -52,31 +77,26 @@ const Home = () => {
     DeviceEventEmitter.addListener('beaconsDidRange', data => {
       console.log('found beacons!', data.beacons.sort((a, b) => a.distance - b.distance));
       if (data.beacons.length > 0) {
-        setBeacons(data.beacons);
+        const nearestBeacon = data.beacons.sort((a, b) => a.distance - b.distance)[0];
         setCounter(0);
-        if (
-          data.beacons.sort((a, b) => a.distance - b.distance)[0].minor === 42714 &&
-          data.beacons.sort((a, b) => a.distance - b.distance)[0].major === 8817
-        ) {
-          const currentRoom = 'Lab';
-          if (room !== currentRoom) {
-            setRoom('Lab');
-            // setUserActivity({
-            //   userId: uniqueId,
-            //   roomId: 'Lab',
-            // });
+        if (nearestBeacon.minor === 42714 && nearestBeacon.major === 8817) {
+          const currentRoom = 'Conference';
+          if (ref.current !== currentRoom) {
+            setValue(currentRoom);
+            createUserHistory(nearestBeacon);
           }
-        } else if (
-          data.beacons.sort((a, b) => a.distance - b.distance)[0].minor === 49385 &&
-          data.beacons.sort((a, b) => a.distance - b.distance)[0].major === 30174
-        ) {
+        } else if (nearestBeacon.minor === 49385 && nearestBeacon.major === 30174) {
           const currentRoom = 'Kitchen';
-          if (room !== currentRoom) {
-            setRoom('Kitchen');
-            // setUserActivity({
-            //   userId: uniqueId,
-            //   roomId: 'Kitchen',
-            // });
+          if (ref.current !== currentRoom) {
+            setValue(currentRoom);
+            createUserHistory(nearestBeacon);
+          }
+        } else if (nearestBeacon.minor === 15000 && nearestBeacon.major === 11000) {
+          const currentRoom = 'Lab';
+          if (ref.current !== currentRoom) {
+            console.log('whyyyyyy?');
+            setValue(currentRoom);
+            createUserHistory(nearestBeacon);
           }
         }
       } else {
@@ -84,9 +104,8 @@ const Home = () => {
         setCounter(newCounter);
         if (counter > 15) {
           const currentRoom = 'No Room Assigned';
-          if (room !== currentRoom) {
-            console.log('Not in range of any room');
-            setRoom('No Room Assigned');
+          if (ref.current !== currentRoom) {
+            setValue('No Room Assigned');
             // deleteUserActivity({
             //   userId: uniqueId,
             // });
@@ -104,12 +123,12 @@ const Home = () => {
   return (
     <Container>
       <Content padder>
-        {room ? (
+        {ref.current ? (
           <>
             <Card>
-              <CardItem header>
-                <Body>
-                  <Text>Your Phone's Unique ID</Text>
+              <CardItem header style={styles.headerContainer}>
+                <Body style={styles.header}>
+                  <Text style={styles.headerText}>Your Phone's Unique ID</Text>
                 </Body>
               </CardItem>
               <CardItem>
@@ -117,9 +136,9 @@ const Home = () => {
               </CardItem>
             </Card>
             <Card>
-              <CardItem header>
-                <Body>
-                  <Text>Your Phone's Name</Text>
+              <CardItem header style={styles.headerContainer}>
+                <Body style={styles.header}>
+                  <Text style={styles.headerText}>Your Phone's Name</Text>
                 </Body>
               </CardItem>
               <CardItem>
@@ -127,48 +146,42 @@ const Home = () => {
               </CardItem>
             </Card>
             <Card>
-              <CardItem>
-                <Body>
-                  <Body>
-                    <Text>You are in:</Text>
-                  </Body>
-                  <CardItem>
-                    <Body>
-                      <Text>{room} Area</Text>
-                    </Body>
-                  </CardItem>
+              <CardItem header style={styles.headerContainer}>
+                <Body style={styles.header}>
+                  <Text style={styles.headerText}>Current Room</Text>
                 </Body>
+              </CardItem>
+              <CardItem>
+                <Text>{ref.current}</Text>
               </CardItem>
             </Card>
             <Card>
-              <CardItem>
-                <Body>
-                  <Body>
-                    <Text>Nearest Bacon</Text>
-                  </Body>
-                  <CardItem>
-                    {room === 'Kitchen' ? (
-                      <Image
-                        style={{height: 300, width: null, flex: 1}}
-                        source={require('../Assets/beacon_blue.png')}
-                      />
-                    ) : (
-                      <Image
-                        style={{height: 300, width: null, flex: 1}}
-                        source={require('../Assets/beacon_green.png')}
-                      />
-                    )}
-                  </CardItem>
+              <CardItem header style={styles.headerContainer}>
+                <Body style={styles.header}>
+                  <Text style={styles.headerText}>Nearest Bacon</Text>
                 </Body>
+              </CardItem>
+              <CardItem>
+                {ref.current === 'Kitchen' ? (
+                  <Image
+                    style={{height: 300, width: null, flex: 1}}
+                    source={require('../Assets/beacon_blue.png')}
+                  />
+                ) : (
+                  <Image
+                    style={{height: 300, width: null, flex: 1}}
+                    source={require('../Assets/beacon_green.png')}
+                  />
+                )}
               </CardItem>
             </Card>
           </>
         ) : (
           <>
             <Card>
-              <CardItem header>
-                <Body>
-                  <Text>Your Phone's Unique ID</Text>
+              <CardItem header style={styles.headerContainer}>
+                <Body style={styles.header}>
+                  <Text style={styles.headerText}>Your Phone's Unique ID</Text>
                 </Body>
               </CardItem>
               <CardItem>
@@ -176,9 +189,9 @@ const Home = () => {
               </CardItem>
             </Card>
             <Card>
-              <CardItem header>
-                <Body>
-                  <Text>Your Phone's Name</Text>
+              <CardItem header style={styles.headerContainer}>
+                <Body style={styles.header}>
+                  <Text style={styles.headerText}>Your Phone's Name</Text>
                 </Body>
               </CardItem>
               <CardItem>
@@ -189,7 +202,7 @@ const Home = () => {
               <CardItem>
                 <Body>
                   <Body>
-                    <Text>Searching for Area</Text>
+                    <Text>Searching for Beacons</Text>
                   </Body>
                 </Body>
               </CardItem>

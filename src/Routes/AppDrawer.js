@@ -11,13 +11,13 @@ const AppDrawer = createDrawerNavigator(
     Home: {
       screen: MainStack,
       navigationOptions: () => ({
-        drawerIcon: () => <Icon name="md-home" style={{fontSize: 24}} />,
+        drawerIcon: () => <Icon name="md-home" style={{fontSize: 24, color: 'blue'}} />,
       }),
     },
     Profile: {
       screen: ProfileStack,
       navigationOptions: () => ({
-        drawerIcon: () => <Icon name="md-cog" style={{fontSize: 24}} />,
+        drawerIcon: () => <Icon name="md-cog" style={{fontSize: 24, color: 'blue'}} />,
       }),
     },
   },
@@ -25,7 +25,10 @@ const AppDrawer = createDrawerNavigator(
     initialRouteName: 'Home',
     contentComponent: DrawerMenu,
     contentOptions: {
-      activeTintColor: 'orange',
+      activeTintColor: 'blue',
+      labelStyle: {
+        color: 'blue',
+      },
     },
   }
 );

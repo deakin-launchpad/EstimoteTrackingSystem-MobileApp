@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {View, StyleSheet, Image, Text, ScrollView} from 'react-native';
-import {Label} from 'native-base';
+import {Label, Card, CardItem, Body} from 'native-base';
 import getUserProfile from '../../Api/Profile';
 
 const userImage = require('../../Assets/profile.png');
@@ -11,7 +11,6 @@ const styles = StyleSheet.create({
   },
   userImageContainer: {
     height: 150,
-    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -19,15 +18,22 @@ const styles = StyleSheet.create({
     height: 90,
     width: 90,
     borderRadius: 60,
+    borderColor: 'black',
+    borderWidth: 2,
+    backgroundColor: 'white',
+  },
+  header: {
+    flexDirection: 'row',
+  },
+  headerContainer: {
+    backgroundColor: 'blue',
+  },
+  headerText: {
+    fontWeight: 'bold',
+    color: 'white',
   },
   infoContainer: {
     padding: 10,
-  },
-  info: {
-    margin: 10,
-  },
-  infoLabel: {
-    marginVertical: 5,
   },
   verified: {
     color: 'green',
@@ -61,22 +67,46 @@ const UserProfile = () => {
             )}
           </View>
           <View style={styles.infoContainer}>
-            <View style={styles.info}>
-              <Label style={styles.infoLabel}>Name</Label>
-              <Text>{`${profile.firstName} ${profile.lastName}`}</Text>
-            </View>
-            <View style={styles.info}>
-              <Label style={styles.infoLabel}>Email</Label>
-              <Text>{profile.emailId}</Text>
-            </View>
-            <View style={styles.info}>
-              <Label style={styles.infoLabel}>Phone Number</Label>
-              <Text>{`${profile.countryCode}-${profile.phoneNumber}`}</Text>
-            </View>
-            <View style={styles.info}>
-              <Label style={styles.infoLabel}>Joined At</Label>
-              <Text>{new Date(profile.registrationDate).toISOString().substring(0, 10)}</Text>
-            </View>
+            <Card>
+              <CardItem header style={styles.headerContainer}>
+                <Body style={styles.header}>
+                  <Text style={styles.headerText}>Name</Text>
+                </Body>
+              </CardItem>
+              <CardItem>
+                <Text>{`${profile.firstName} ${profile.lastName}`}</Text>
+              </CardItem>
+            </Card>
+            <Card>
+              <CardItem header style={styles.headerContainer}>
+                <Body style={styles.header}>
+                  <Text style={styles.headerText}>Email</Text>
+                </Body>
+              </CardItem>
+              <CardItem>
+                <Text>{profile.emailId}</Text>
+              </CardItem>
+            </Card>
+            <Card>
+              <CardItem header style={styles.headerContainer}>
+                <Body style={styles.header}>
+                  <Text style={styles.headerText}>Phone Number</Text>
+                </Body>
+              </CardItem>
+              <CardItem>
+                <Text>{`${profile.countryCode}-${profile.phoneNumber}`}</Text>
+              </CardItem>
+            </Card>
+            <Card>
+              <CardItem header style={styles.headerContainer}>
+                <Body style={styles.header}>
+                  <Text style={styles.headerText}>Joined At</Text>
+                </Body>
+              </CardItem>
+              <CardItem>
+                <Text>{new Date(profile.registrationDate).toISOString().substring(0, 10)}</Text>
+              </CardItem>
+            </Card>
           </View>
         </ScrollView>
       ) : (
